@@ -1,6 +1,7 @@
 node_modules/
 sample/
-src/test.html
+src/sample.html
 build.js
 package-lock.json
 Panduan_Git.md
+backup.bat

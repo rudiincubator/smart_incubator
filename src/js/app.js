@@ -1,0 +1,6 @@
+const {render}=preact;
+function iniApp() {
+    render(preact.h(AppView),document.body);
+}
+
+document.addEventListener('DOMContentLoaded',iniApp);
