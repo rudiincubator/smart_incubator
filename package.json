@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node build.js"
+    "build": "node build.js",
+    "type": "module"
   },
+  
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rudiincubator/smart_incubator.git"

@@ -1,0 +1,1 @@
+class AppController{constructor(o){this.model=o}}const controller=new AppController(model);

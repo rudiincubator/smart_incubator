@@ -1,5 +1,8 @@
 const { h } = preact;
 const { useState, useEffect, useRef } = preactHooks;
+const infoTable = new AppTable({ header: formatTable.info, data: dataSample.info, key: 'info-table' });
+const eggTable = new AppTable({ header: formatTable.egg, data: dataSample.egg, key: 'egg-table' });
+const incubationTable = new AppTable({ header: formatTable.incubator, data: dataSample.incubator, key: 'incubation-table' });
 
 function Nav({ onNav }) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,6 +20,7 @@ function Nav({ onNav }) {
             h('div', { className: isMenuOpen ? 'toggle active' : 'toggle', onClick: handleToggle }, h('span'), h('span'), h('span'),),
             h('div', { className: isMenuOpen ? 'menu active' : 'menu' },
                 h('a', { href: '#', onClick: () => hancleNav('home') }, 'Beranda'),
+                h('a', { href: '#', onClick: () => hancleNav('incubator') }, 'Incubator'),
                 h('a', { href: '#', onClick: () => hancleNav('setting') }, 'Pengaturan'),
                 h('a', { href: '#', onClick: () => hancleNav('auth') }, 'Keluar'),
             ),
@@ -34,7 +38,7 @@ function Footer() {
         h('div', { className: 'footer-content' },
             h('p', null,
                 `\u00A9 ${yearText} Smart Incubator By:`,
-                h('a', { href: 'https://www.facebook.com/romeodelta89', target: '_blank', rel: 'noopener noreferrer' }, 'Romeo Delta'),
+                h('a', { href: 'https://www.facebook.com/rudiromeodelta', target: '_blank', rel: 'noopener noreferrer' }, 'Romeo Delta'),
             ),
 
         ),
@@ -56,50 +60,7 @@ function RelayCard({ relayName, status }) {
     );
 }
 
-function Table({ header, data, idKey = 'id' }) {
-
-    return h('div', { className: 'table-wrapper' },
-        h('table', null,
-            // HEADERS
-            h('thead', null,
-                h('tr', null,
-                    header.map((title, i) => h('th', { key: `h-${i}` }, title))
-                )
-            ),
-            // BODY ROWS
-            h('tbody', null,
-                data.map((row, rIndex) => {
-                    const rowId = row[idKey] !== undefined && row[idKey] !== null
-                        ? row[idKey]
-                        : `row-${rIndex}`;
-                    return h('tr', { key: rowId },
-                        Object.entries(row).map(([key, value], cIndex) => {
-                            // if (key === 'temperature') value = `${value} ℃`;
-                            // if (key === 'humidity') value = `${value} %`;
-                            return h('td', { key: `${rowId}-cell-${cIndex}` }, value);
-                        })
-                    );
-                })
-            )
-        )
-    );
-}
-
 function Home() {
-    const tHeader = ['Waktu', `Suhu \u2103`, 'Kelembaban %'];
-    const tData = [
-        { time: '10:12', temperature: 35.6, humidity: 62 },
-        { time: '10:15', temperature: 36.0, humidity: 63 },
-        { time: '10:18', temperature: 36.5, humidity: 64 }
-    ];
-
-    const thTelur =
-        ['Kode', 'Jenis', 'Jumlah', 'Tanggal Masuk', 'Tanggal Menetas', 'Status'];
-    const tdTelur = [
-        { kode: 'T001', type: 'Ayam Kampung', quantity: '10', dateIn: '01/12/2025', dateHatch: '21/12/2025,', status: 'Inkubasi' },
-        { kode: 'T002', type: 'Ayam Elba', quantity: '20', dateIn: '06/12/2025', dateHatch: '21/12/2025,', status: 'Inkubasi' },
-        { kode: 'T003', type: 'Ayam Bangkok', quantity: '5', dateIn: '12/12/2025', dateHatch: '21/12/2025,', status: 'Inkubasi' },
-    ];
 
     return h('div', { className: 'main-section' },
         h('h1', null, 'Informasi'),
@@ -122,7 +83,7 @@ function Home() {
             h('spacer'),
             h('div', { className: 'section' },
                 h('h2', null, 'Suhu Dan Kelembaban'),
-                h(Table, { header: tHeader, data: tData, idKey: 'time' }),
+                h(TableUI, { controller: infoTable }),
             ),
             h('spacer'),
             h('div', { className: 'section' },
@@ -130,10 +91,10 @@ function Home() {
                     h('h2', null, 'Data Telur'),
                     h('div', { className: 'right-group' },
                         h('p', null, 'Jumlah:'),
-                        h('p', null, '200'),
+                        h('p', null, eggTable.getSum('quantity')),
                     ),
                 ),
-                h(Table, { header: thTelur, data: tdTelur, idKey: 'kode' }),
+                h(TableUI, { controller: eggTable })
             ),
 
         ),
@@ -142,17 +103,26 @@ function Home() {
 }
 
 function SetDatetime() {
+
+    const handleSyncDateTime = () => {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        const dateString = now.toISOString().split('T')[0];
+        document.getElementById('setTime').value = timeString;
+        document.getElementById('setDate').value = dateString;
+    };
+
     return h('div', { className: 'card' },
         h('h2', null, 'Waktu dan Tanggal'),
         h('div', { className: 'form-row' },
             h('div', { className: 'form-group' },
                 h('label', { htmlFor: 'setTime' }, 'Waktu'),
                 h('input', { type: 'time', id: 'setTime' }),
-            ),
-            h('div', { className: 'form-group' },
+                // ),
+                // h('div', { className: 'form-group' },
                 h('label', { htmlFor: 'setDate' }, 'Tanggal'),
                 h('input', { type: 'date', id: 'setDate' }),
-                h('button', null, 'Sync'),
+                h('button', { onClick: handleSyncDateTime }, 'Sync'),
             ),
         ),
         h('button', { className: 'btn-save' }, 'Simpan'),
@@ -161,101 +131,6 @@ function SetDatetime() {
 }
 
 function SetIncubator() {
-    const incubatorHeader = [
-        'Mulai Tanggal',
-        'Hingga Tanggal',
-        'Suhu (°C)',
-        'Kelembaban (%)',
-        'Pembalik (jam)',
-        'Keterangan'
-    ];
-    const incData = [
-        {
-            startDate: "2025-12-01",
-            endDate: "2025-12-03",
-            temperature: 38,
-            humidity: 60,
-            turner: 0,
-            description: "Pembentukan Embrio"
-        },
-        {
-            startDate: "2025-11-04",
-            endDate: "2025-11-15",
-            temperature: 38,
-            humidity: 60,
-            turner: 8,
-            description: "Pemerataan nutrisi, suhu pada telur"
-        },
-        {
-            startDate: "2025-11-16",
-            endDate: "2025-11-18",
-            temperature: 37.5,
-            humidity: 70,
-            turner: 5,
-            description: "Persiapan penetesan"
-        },
-        {
-            startDate: "2025-11-19",
-            endDate: "2025-11-21",
-            temperature: 37.0,
-            humidity: 75,
-            turner: 0,
-            description: "Masa penetasan"
-        }
-    ];
-    const [isEdit, setIsEdit] = useState(false);
-    const [incubatorData, setIncubatorData] = useState(incData);
-
-    function handleCancel() {
-        setIncubatorData(incData);
-        setIsEdit(false)
-    }
-    function handleEdit() {
-        setIsEdit(prev => !prev);
-    }
-    function handleAdd() {
-        const now = new Date();
-        const dateString = now.toISOString().split('T')[0];
-        setIncubatorData(prevData => [
-            ...prevData,
-            {
-                startDate: dateString,
-                endDate: dateString,
-                temperature: "",
-                humidity: "",
-                turner: "",
-                description: ""
-            }
-        ]);
-    }
-
-
-    const getInputType = (key) => {
-        if (key.includes("Date")) return "date";
-        if (key === "temperature" || key === "humidity" || key === "turner") return "number";
-        return "text";
-    };
-
-    // 🔥 EVENT SAVE DATA
-    const handleSave = () => {
-        const rows = [...document.querySelectorAll(".incRow")];
-
-        const updated = rows.map(row => {
-            const inputs = [...row.querySelectorAll("input")];
-
-            return {
-                startDate: inputs[0].value,
-                endDate: inputs[1].value,
-                temperature: Number(inputs[2].value),
-                humidity: Number(inputs[3].value),
-                turner: Number(inputs[4].value),
-                description: inputs[5].value
-            };
-        });
-
-        console.log("Updated Data:", updated);
-    };
-
 
 
     return h('div', { className: 'section' },
@@ -264,7 +139,7 @@ function SetIncubator() {
             h('h2', null, 'Incubator'),
             h('div', { className: 'right-group' },
                 h('div', { className: 'form-group' },
-                    h('label', { htmlFor: 'incubatorOption' }, 'Pilih Jenis Telur'),
+                    h('label', { htmlFor: 'incubatorOption' }, 'Mode Otomatis'),
                     h('select', { id: 'incubatorOption' },
                         h('option', { value: 'ayam' }, 'Ayam'),
                         h('option', { value: 'bebek' }, 'Bebek'),
@@ -274,38 +149,7 @@ function SetIncubator() {
             ),
         ),
         h('spacer'),
-        h('div', { className: 'table-wrapper' },
-            h('table', { className: isEdit ? 'table-input' : '' },
-
-                h('thead', null,
-                    h('tr', null,
-                        incubatorHeader.map((title, i) => h('th', { key: i }, title))
-                    )
-                ),
-                h('tbody', null,
-                    incubatorData.map((row, rowIndex) =>
-                        h('tr', { key: rowIndex, className: "incRow" },
-                            Object.entries(row).map(([key, value], colIndex) =>
-                                h('td', { key: `${rowIndex}-${colIndex}` },
-                                    isEdit ?
-                                        h('input', {
-                                            type: getInputType(key),
-                                            value,
-                                            step: key === "temperature" ? 0.1 : (key === "humidity" ? 1 : undefined),
-                                            min: key === "temperature" || key === "humidity" || key === 'turner' ? 0 : undefined,
-                                        }) : value,
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        ),
-        h('div', { className: isEdit ? 'btn-incubator' : 'btn-edit' },
-            isEdit && h('button', { onClick: handleAdd }, 'Tambah'),
-            h('button', { onClick: isEdit ? handleCancel : handleEdit }, isEdit ? 'Batal' : 'Ubah'),
-            isEdit && h('button', { onClick: handleSave }, 'Simpan'),
-        ),
+        h(TableUI, { controller: incubationTable, editTable: true }),
         h('spacer'),
         h('h4', null, 'Toleransi:'),
         h('div', { className: 'form-row' },
@@ -317,6 +161,37 @@ function SetIncubator() {
                 h('label', { htmlFor: 'humidityTolerance' }, 'Kelembaban'),
                 h('input', { type: 'number', step: 1, min: 0, max: 20, id: 'humidityTolerance' })
             ),
+        ),
+    );
+}
+
+
+
+
+function EggTable() {
+
+    return h('div', { className: 'section' },
+        h('div', { className: 'card-header' },
+            h('h2', null, 'Data Telur'),
+            h('div', { className: 'right-group' },
+                h('p', null, 'Jumlah:'),
+                h('p', null, '250'),
+            ),
+        ),
+        h(TableUI, { controller: eggTable, editTable: true })
+        // h(TableCanEdit, { header: sample.thTelur, data: sample.tdTelur, isOnInput: true })
+    );
+}
+
+function IncubatorSetting() {
+    return h('div', { className: 'main-section' },
+        h('h1', null, 'Pengaturan Incubator'),
+        h('div', { className: 'section' },
+            h(SetDatetime),
+            h('spacer'),
+            h(SetIncubator),
+            h('spacer'),
+            h(EggTable),
         ),
     );
 }
@@ -361,6 +236,22 @@ function SetTelegram() {
                     h('option', { value: 'false' }, 'Tidak'),
                 ),
                 h('button', null, 'Uji'),
+            ),
+            h('div', { className: 'form-group' },
+                h('label', { htmlFor: 'tgLowTemperatureAlarm' }, 'Peringatan Suhu Rendah'),
+                h('input', { type: 'number', min: 1, id: 'tgLowTemperatureAlarm' })
+            ),
+            h('div', { className: 'form-group' },
+                h('label', { htmlFor: 'tgHighTemperatureAlarm' }, 'Peringatan Suhu Tinggi'),
+                h('input', { type: 'number', min: 1, id: 'tgHighTemperatureAlarm' })
+            ),
+            h('div', { className: 'form-group' },
+                h('label', { htmlFor: 'tgLowHumidityAlarm' }, 'Peringatan Kelembaban Rendah'),
+                h('input', { type: 'number', min: 1, id: 'tgHighHumidityAlarm' })
+            ),
+            h('div', { className: 'form-group' },
+                h('label', { htmlFor: 'tgHighTemperatureAlarm' }, 'Peringatan Kelembaban Rendah'),
+                h('input', { type: 'number', min: 1, id: 'tgHighTemperatureAlarm' })
             ),
         ),
         h('button', { className: 'btn-save' }, 'Simpan'),
@@ -463,10 +354,6 @@ function Setting() {
     return h('div', { className: 'main-section' },
         h('h1', null, 'Pengaturan'),
         h('div', { className: 'section' },
-            h(SetDatetime),
-            h('spacer'),
-            h(SetIncubator),
-            h('spacer'),
             h(SetRelay),
             h('spacer'),
             h(SetWiFi),
@@ -498,6 +385,7 @@ function AuthForm() {
         ),
     );
 }
+
 function AppView() {
     const [activeSection, setActiveSection] = useState('home');
     function hancleNav(section) {
@@ -506,6 +394,7 @@ function AppView() {
     return h('div', { className: 'wrapper' },
         h(Nav, { onNav: hancleNav }),
         activeSection === 'home' && h(Home),
+        activeSection === 'incubator' && h(IncubatorSetting),
         activeSection === 'setting' && h(Setting),
         activeSection === 'auth' && h(AuthForm),
         h(Footer),

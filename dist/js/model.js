@@ -1,0 +1,1 @@
+class AppModel{constructor(){this.homeData={},this.eggData={},this.settingData={}}}
